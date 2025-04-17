@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>ZIM - Code Creativity</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/png" href="assets/icon-512.png" sizes="512x512">
+    <link rel="apple-touch-icon" href="assets/icon-512.png">
+    <meta name="theme-color" content="#ffffff">
+
+    <script src="https://zimjs.org/cdn/gifler.js"></script>
+    <!-- zimjs.com - JavaScript Canvas Framework -->
+    <script type="module">
+
+        import zim from "https://zimjs.org/cdn/017/zim";
+        // import gifler from "https://zimjs.org/cdn/gifler.js";
+        // See Docs under Frame for FIT, FILL, FULL, and TAG
+        new Frame({ scaling: FULL, width: 1024, height: 768, color: light, outerColor: dark, ready, assets: [
+            "assets/colors.gif",
+            "assets/start.gif",
+            "assets/Gravitone (3).png"
+        ]});
+        function ready() {
+
+            // given F (Frame), S (Stage), W (width), H (height)
+            // put code here
+
+            const circle = new Circle(10, white)
+                .center()
+                .drag()
+                .alp(0); // Hide initially
+
+            // rectangle for color feedback
+            const backgroundRect = new Rectangle(W, H, "#000000")
+                .center()
+                .alp(0); // Start fully transparent
+            
+            // Track time spent in each section
+            let sectionTime = 0;
+            let lastSection = "";
+            let lastTime = Date.now();
+            
+            //  colors
+            const chordColors = {
+                fMaj9: "#E86A33",  
+                cMaj7: "#FFE15D",  
+                gAdd9: "#4AAD52",  
+                
+                aMin7: "#AF6E51",  
+                dMin7: "#C7B446",  
+                eMin9: "#3D7B48"   
+            };
+
+            // Create the welcome screen
+            const welcomeContainer = new Container(W, H).center();
+            
+            // Background GIF
+            const gifBackground = new GIF("assets/colors.gif", W, H)
+                .addTo(welcomeContainer)
+                .center();
+
+            // Title logo - adjusted scale and position
+            const titleLogo = new Pic("assets/Gravitone (3).png")
+                .sca(0.8)
+                .addTo(welcomeContainer)
+                .pos(0, 50, CENTER, TOP); // Position at top center with 50px padding from top
+
+            // Start button - adjusted scale and position
+            const startButton = new Pic("assets/start.gif")
+                .sca(0.7)
+                .addTo(welcomeContainer)
+                .pos(0, 0, CENTER, CENTER) // Position at exact center
+                .tap(() => {
+                    // Fade out welcome screen
+                    welcomeContainer.animate({
+                        props: {alpha:0},
+                        time: 0.5,
+                        call: () => {
+                            welcomeContainer.removeFrom();
+                            // Show the circle
+                            circle.animate({
+                                props: {alpha:1},
+                                time: 3.3
+                            });
+                            // Initialize synth
+                            initSynth();
+                        }
+                    });
+                });
+
+            // Center all elements in welcome container
+            welcomeContainer.center();
+
+            function initSynth() {
+                // Create synth instance
+                const synth = new Synth();
+
+                // Define our chord tones as arrays of notes
+                const chords = {
+                    // Major chords for top half
+                    fMaj9: ["F2", "A3", "C2", "E3", "G3"], // F Major 9 (F, A, C, E, G)
+                    cMaj7: ["C2", "E3", "G3", "B3"],       // C Major 7 (C, E, G, B)
+                    gAdd9: ["G2", "B3", "D3", "A3"],       // G add 9 (G, B, D, A)
+
+                    // Minor chords for bottom half
+                    aMin7: ["A2", "C3", "E3"],       // A minor 7 (A, C, E, G)
+                    dMin7: ["D2", "F3", "A3", "C3"],       // D minor 7 (D, F, A, C)
+                    eMin9: ["E2", "G3", "B3", "D3"]  // E minor 9 (E, G, B, D, F)
+                };
+
+
+
+
+                // Create empty arrays to hold the tone objects for each chord
+                const fMaj9Tones = [];
+                const cMaj7Tones = [];
+                const gAdd9Tones = [];
+                const aMin7Tones = [];
+                const dMin7Tones = [];
+                const eMin9Tones = [];
+
+                // Create tones for F Major 9
+                chords.fMaj9.forEach(note => {
+                    fMaj9Tones.push(synth.tone({
+                        volume: 0,  // Start silent
+                        note: note,
+                        shape: SAW
+                    }));
+                });
+
+                // Create tones for C Major 7
+                chords.cMaj7.forEach(note => {
+                    cMaj7Tones.push(synth.tone({
+                        volume: 0,  // Start silent
+                        note: note,
+                        shape: SAW
+                    }));
+                });
+
+                // Create tones for G add 9
+                chords.gAdd9.forEach(note => {
+                    gAdd9Tones.push(synth.tone({
+                        volume: 0,  // Start silent
+                        note: note,
+                        shape: SAW
+                    }));
+                });
+
+                // Create tones for A minor 7
+                chords.aMin7.forEach(note => {
+                    aMin7Tones.push(synth.tone({
+                        volume: 0,  // Start silent
+                        note: note,
+                        shape: SAW
+                    }));
+                });
+
+                // Create tones for D minor 7
+                chords.dMin7.forEach(note => {
+                    dMin7Tones.push(synth.tone({
+                        volume: 0,  // Start silent
+                        note: note,
+                        shape: SAW
+                    }));
+                });
+
+                // Create tones for E minor 9
+                chords.eMin9.forEach(note => {
+                    eMin9Tones.push(synth.tone({
+                        volume: 0,  // Start silent
+                        note: note,
+                        shape: SAW
+                    }));
+                });
+
+                // Set up ticker for chord selection and filter effect
+                timeout(2,()=>{
+                Ticker.add(() => {
+                    const tarx = Math.round(circle.x/W*100);
+                    const tary = Math.round(circle.y/H*100);
+                    
+                    // Log coordinates to console
+                    console.log(`Circle position: x=${tarx}%, y=${tary}%, actual: x=${circle.x}, y=${circle.y}`);
+                    
+                    // Determine which chord to play based on x position AND y position
+                    // Top half (y < 50): Major chords
+                    // Bottom half (y >= 50): Minor chords
+                    // Left third: F Major 9 (top) / A minor 7 (bottom)
+                    // Middle third: C Major 7 (top) / D minor 7 (bottom)
+                    // Right third: G add 9 (top) / E minor 9 (bottom)
+                    let activeChord;
+                    let currentChordKey = "";
+                    
+                    // Determine which chord section we're in
+                    if (tary < 50) {
+                        // TOP HALF - MAJOR CHORDS
+                        if (tarx < 33) {
+                            // Left section - F Major 9
+                            activeChord = fMaj9Tones;
+                            currentChordKey = "fMaj9";
+                        } else if (tarx < 67) {
+                            // Middle section - C Major 7
+                            activeChord = cMaj7Tones;
+                            currentChordKey = "cMaj7";
+                        } else {
+                            // Right section - G add 9
+                            activeChord = gAdd9Tones;
+                            currentChordKey = "gAdd9";
+                        }
+                    } else {
+                        // BOTTOM HALF - MINOR CHORDS
+                        if (tarx < 33) {
+                            // Left section - A minor 7
+                            activeChord = aMin7Tones;
+                            currentChordKey = "aMin7";
+                        } else if (tarx < 67) {
+                            // Middle section - D minor 7
+                            activeChord = dMin7Tones;
+                            currentChordKey = "dMin7";
+                        } else {
+                            // Right section - E minor 9
+                            activeChord = eMin9Tones;
+                            currentChordKey = "eMin9";
+                        }
+                    }
+                    
+                    // Calculate filter effect based on distance from center
+                    // Center point is at x=50%, y=50%
+                    const distX = Math.abs(tarx - 50);
+                    const distY = Math.abs(tary - 50);
+                    const dist = Math.sqrt(distX*distX + distY*distY);
+                    
+                    // Normalize distance to 0-1 range (max possible distance is sqrt(50²+50²) = ~70.7)
+                    const normalizedDist = Math.min(dist / 70.7, 1); 
+                    
+                    // Create filter effect based on distance from center
+                    const filterEffect = Math.pow(normalizedDist, 0.8); // Slight curve to make it more responsive
+                    
+                    // Update the background rectangle color and opacity
+                    if (currentChordKey && filterEffect > 0.2) {
+                        // Calculate time spent in current section
+                        const currentTime = Date.now();
+                        if (currentChordKey === lastSection) {
+                            sectionTime += (currentTime - lastTime) / 1000; // Convert to seconds
+                        } else {
+                            sectionTime = 0; // Reset time when changing sections
+                        }
+                        lastSection = currentChordKey;
+                        lastTime = currentTime;
+                        
+                        // Change color based on current chord section
+                        backgroundRect.color = chordColors[currentChordKey];
+                        
+                        // Set opacity based on both distance and time spent
+                        // Base opacity from distance (0.1 to 0.4) - increased range
+                        const distanceOpacity = 0.1 + (filterEffect - 0.2) * 0.4;
+                        // Time-based opacity (0 to 0.9) that builds up over 4 seconds - increased range and duration
+                        const timeOpacity = Math.min(sectionTime / 4, 0.9);
+                        // Combined opacity with time having more influence
+                        const opacity = Math.min(distanceOpacity + timeOpacity, 0.95);
+                        
+                        backgroundRect.animate({
+                            props: {alpha: opacity},
+                            time: 2.15  // Slower transition time
+                        });
+                    } else {
+                        // Reset time tracking when in center
+                        sectionTime = 0;
+                        lastSection = "";
+                        // Fade out if in center or no active chord - slower fade out
+                        backgroundRect.animate({
+                            props: {alpha: 0},
+                            time: 2.15
+                        });
+                    }
+                    
+                    // Filter settings - more dramatic as we get further from center
+                    const filterCutoff = 200 + filterEffect * 3800;
+                    const filterResonance = filterEffect < 0.7 ? 
+                        1 + (filterEffect * 12) : 
+                        9.4 - ((filterEffect - 0.7) * 15);
+                    
+                    // First, silence ALL chords with no transition time (immediate)
+                    const allChords = [fMaj9Tones, cMaj7Tones, gAdd9Tones, aMin7Tones, dMin7Tones, eMin9Tones];
+                    allChords.forEach(chordTones => {
+                        chordTones.forEach(tone => {
+                            tone.volume = 0; // Immediately set volume to 0
+                        });
+                    });
+                    
+                    // Then only apply volume to active chord if filter effect is active
+                    if (filterEffect > 0.2) { // Only play if somewhat away from center
+                        activeChord.forEach(tone => {
+                            // Set volume directly instead of using ramp()
+                            tone.volume = 0.4 * (filterEffect - 0.2) / 0.8; // Adjust volume scale
+                            
+                            // Apply filter
+                            if (tone.filter) {
+                                tone.filter.frequency.value = filterCutoff;
+                                tone.filter.Q.value = filterResonance;
+                                tone.filter.type = "lowpass";
+                            }
+                        });
+                    }
+                });
+            });
+        };
+        } // end ready
+
+    </script>
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
+</head>
+
+<body></body>
+
+</html>
